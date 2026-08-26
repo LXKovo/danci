@@ -1,49 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { UserRoundPlus } from "lucide-react";
+import { useState } from "react";
+import { LockKeyhole, Mail, ShieldCheck, User, UserRoundPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LockKeyhole, Mail, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { AdminRole } from "@/lib/db/schema";
 
-interface AddAdminDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAdd: (data: { name: string; email: string; password: string }) => string | null;
+export interface AdminFormValue {
+  name: string;
+  email: string;
+  password: string;
+  role: AdminRole;
 }
 
-export function AddAdminDialog({ open, onOpenChange, onAdd }: AddAdminDialogProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+interface AdminDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialValue?: Omit<AdminFormValue, "password">;
+  onSubmit: (data: AdminFormValue) => Promise<string | null>;
+}
+
+export function AdminDialog({ open, onOpenChange, initialValue, onSubmit }: AdminDialogProps) {
+  const [form, setForm] = useState<AdminFormValue>(() =>
+    initialValue
+      ? { ...initialValue, password: "" }
+      : { name: "", email: "", password: "", role: "admin" }
+  );
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const editing = Boolean(initialValue);
 
-  useEffect(() => {
-    if (open) {
-      setName("");
-      setEmail("");
-      setPassword("");
-      setError(null);
-    }
-  }, [open]);
+  function update(field: keyof AdminFormValue, value: string) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return setError("请输入姓名");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("请输入有效的邮箱地址");
-    if (password.length < 6) return setError("密码至少 6 位");
-    const err = onAdd({ name, email, password });
-    if (err) return setError(err);
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const nextError = await onSubmit(form);
+    setSubmitting(false);
+    if (nextError) return setError(nextError);
     onOpenChange(false);
   }
 
@@ -51,70 +52,28 @@ export function AddAdminDialog({ open, onOpenChange, onAdd }: AddAdminDialogProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserRoundPlus className="size-4 text-primary" />
-            添加管理员
-          </DialogTitle>
-          <DialogDescription>为团队成员创建管理员账号。</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><UserRoundPlus className="size-4 text-primary" />{editing ? "编辑管理员" : "添加管理员"}</DialogTitle>
+          <DialogDescription>{editing ? "更新账号资料、角色或登录密码。" : "为团队成员创建后台账号。"}</DialogDescription>
         </DialogHeader>
-
         <form onSubmit={handleSubmit} className="space-y-4">
+          <FormField icon={User} label="姓名" id="admin-name"><Input id="admin-name" value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="例如：王老师" className="pl-8" required /></FormField>
+          <FormField icon={Mail} label="邮箱" id="admin-email"><Input id="admin-email" type="email" value={form.email} onChange={(event) => update("email", event.target.value)} placeholder="you@example.com" className="pl-8" required /></FormField>
           <div className="space-y-1.5">
-            <Label htmlFor="admin-name">姓名</Label>
-            <div className="relative">
-              <User className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="admin-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="例如：王老师"
-                className="pl-8"
-              />
-            </div>
+            <Label htmlFor="admin-role">角色</Label>
+            <Select value={form.role} onValueChange={(value) => update("role", value)}>
+              <SelectTrigger id="admin-role" className="h-9 w-full"><ShieldCheck className="size-4 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="admin">管理员</SelectItem><SelectItem value="system-admin">系统管理员</SelectItem></SelectContent>
+            </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="admin-email">邮箱</Label>
-            <div className="relative">
-              <Mail className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="admin-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="pl-8"
-              />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="admin-password">初始密码</Label>
-            <div className="relative">
-              <LockKeyhole className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="admin-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="至少 6 位"
-                className="pl-8"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              取消
-            </Button>
-            <Button type="submit">添加</Button>
-          </DialogFooter>
+          <FormField icon={LockKeyhole} label={editing ? "新密码（可选）" : "初始密码"} id="admin-password"><Input id="admin-password" type="password" value={form.password} onChange={(event) => update("password", event.target.value)} placeholder={editing ? "留空则保持不变" : "至少 8 位"} className="pl-8" required={!editing} /></FormField>
+          {error ? <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+          <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>取消</Button><Button type="submit" disabled={submitting}>{submitting ? "保存中..." : "保存"}</Button></DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
+}
+
+function FormField({ icon: Icon, label, id, children }: { icon: typeof User; label: string; id: string; children: React.ReactNode }) {
+  return <div className="space-y-1.5"><Label htmlFor={id}>{label}</Label><div className="relative"><Icon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />{children}</div></div>;
 }
