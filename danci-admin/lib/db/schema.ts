@@ -56,6 +56,21 @@ export const adminSessions = pgTable(
   (table) => [index("admin_session_admin_id_idx").on(table.adminId)]
 );
 
+// ===== 单词书表 =====
+// 每本单词书的元信息，与 words 表通过 bookId 关联
+export const books = pgTable("books", {
+  id: bigint("id", { mode: "bigint" }).generatedByDefaultAsIdentity().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  wordCount: integer("word_count").notNull().default(0),
+  coverUrl: text("cover_url"),
+  bookId: varchar("book_id", { length: 100 }).notNull().unique(),
+  tags: text("tags"), // 逗号分隔的标签
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  stage: varchar("stage", { length: 20 }).notNull().default("小学"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ===== 单词表 =====
 // 存单词数据，从 JSON 文件导入，content 字段存完整单词信息（例句、短语、同近词等）
 export const words = pgTable("words", {
@@ -67,7 +82,10 @@ export const words = pgTable("words", {
   bookId: text("bookId"),
 });
 
+
 // 从表定义自动推导出「查询返回的行」类型，省得手写。
 // 等价于 AdminUser = { id: string; name: string; email: string; passwordHash: string; ... }
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type Book = typeof books.$inferSelect;
+export type NewBook = typeof books.$inferInsert;
 export type Word = typeof words.$inferSelect;
