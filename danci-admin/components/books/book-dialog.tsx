@@ -28,10 +28,20 @@ interface BookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initial?: Book | null;
-  onSave: (data: { title: string; stage: Book["stage"]; wordCount: number; status: BookStatus }) => void;
+  onSave: (data: {
+    title: string;
+    stage: Book["stage"];
+    wordCount: number;
+    status: BookStatus;
+  }) => void;
 }
 
-export function BookDialog({ open, onOpenChange, initial, onSave }: BookDialogProps) {
+export function BookDialog({
+  open,
+  onOpenChange,
+  initial,
+  onSave,
+}: BookDialogProps) {
   const [title, setTitle] = useState("");
   const [stage, setStage] = useState<Book["stage"]>("小学");
   const [wordCount, setWordCount] = useState("");
@@ -52,7 +62,8 @@ export function BookDialog({ open, onOpenChange, initial, onSave }: BookDialogPr
     e.preventDefault();
     const count = Number(wordCount);
     if (!title.trim()) return setError("请输入书名");
-    if (!Number.isInteger(count) || count <= 0) return setError("词数需为大于 0 的整数");
+    if (!Number.isInteger(count) || count <= 0)
+      return setError("词数需为大于 0 的整数");
     onSave({ title: title.trim(), stage, wordCount: count, status });
     onOpenChange(false);
   }
@@ -66,7 +77,9 @@ export function BookDialog({ open, onOpenChange, initial, onSave }: BookDialogPr
             {initial ? "编辑单词书" : "新建单词书"}
           </DialogTitle>
           <DialogDescription>
-            {initial ? "修改这本书的元信息。" : "填写书名与基本信息以创建一本单词书。"}
+            {initial
+              ? "修改这本书的元信息。"
+              : "填写书名与基本信息以创建一本单词书。"}
           </DialogDescription>
         </DialogHeader>
 
@@ -84,7 +97,10 @@ export function BookDialog({ open, onOpenChange, initial, onSave }: BookDialogPr
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>学段</Label>
-              <Select value={stage} onValueChange={(v) => setStage(v as Book["stage"])}>
+              <Select
+                value={stage}
+                onValueChange={(v) => setStage(v as Book["stage"])}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="选择学段" />
                 </SelectTrigger>
@@ -99,7 +115,10 @@ export function BookDialog({ open, onOpenChange, initial, onSave }: BookDialogPr
             </div>
             <div className="space-y-1.5">
               <Label>状态</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as BookStatus)}>
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as BookStatus)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="选择状态" />
                 </SelectTrigger>
@@ -131,7 +150,11 @@ export function BookDialog({ open, onOpenChange, initial, onSave }: BookDialogPr
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               取消
             </Button>
             <Button type="submit">{initial ? "保存修改" : "创建"}</Button>
