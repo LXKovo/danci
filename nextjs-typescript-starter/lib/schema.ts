@@ -43,16 +43,16 @@ export const books = pgTable(
 );
 
 // ============================================================
-// words — 单词表（已存在于数据库）
+// words — 单词表（已存在于数据库，注意实际列为驼峰命名）
 // ============================================================
 export const words = pgTable(
   'words',
   {
     id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-    wordRank: integer('word_rank'),
-    headWord: varchar('head_word', { length: 255 }),
+    wordRank: integer('wordRank'),
+    headWord: varchar('headWord', { length: 255 }),
     content: json('content'),
-    bookId: varchar('book_id', { length: 100 })
+    bookId: varchar('bookId', { length: 100 })
       .notNull()
       .references(() => books.bookId, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -64,7 +64,43 @@ export const words = pgTable(
 );
 
 // ============================================================
-// study_progress — 学习进度表（新增）
+// user_book_progress — 用户单词书进度
+// ============================================================
+export const userBookProgress = pgTable(
+  'user_book_progress',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    bookId: varchar('book_id', { length: 100 }).notNull().references(() => books.bookId, { onDelete: 'cascade' }),
+    currentWordIndex: integer('current_word_index').default(0).notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userBookUnique: uniqueIndex('user_book_progress_user_book_unique').on(table.userId, table.bookId),
+    userIdIdx: index('user_book_progress_user_id_idx').on(table.userId),
+  }),
+);
+
+// ============================================================
+// user_word_progress — 用户单词学习记录
+// ============================================================
+export const userWordProgress = pgTable(
+  'user_word_progress',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    wordId: bigint('word_id', { mode: 'number' }).notNull().references(() => words.id, { onDelete: 'cascade' }),
+    bookId: varchar('book_id', { length: 100 }).notNull().references(() => books.bookId, { onDelete: 'cascade' }),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userWordUnique: uniqueIndex('user_word_progress_user_word_unique').on(table.userId, table.wordId),
+    userBookIdx: index('user_word_progress_user_book_idx').on(table.userId, table.bookId),
+  }),
+);
+
+// ============================================================
+// study_progress — 学习进度表（兼容旧数据）
 // ============================================================
 export const studyProgress = pgTable(
   'study_progress',

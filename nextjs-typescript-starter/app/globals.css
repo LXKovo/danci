@@ -1,3 +1,69 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --cream: #fff6ef;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--cream);
+  color: #30262e;
+  font-family: var(--font-geist-sans), ui-rounded, -apple-system, system-ui,
+    'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: rgba(255, 107, 107, 0.25);
+  color: #30262e;
+}
+
+/* 柔和纸张质感：顶部的光晕与下载的渐变纸感 */
+.app-shell {
+  position: relative;
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      60% 40% at 110% 0%,
+      rgba(255, 185, 51, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(55% 45% at -10% 8%, rgba(255, 107, 107, 0.14), transparent 55%),
+    var(--cream);
+}
+
+@layer components {
+  /* 通用卡片 */
+  .card {
+    @apply rounded-3xl bg-white shadow-card;
+  }
+
+  /* 主按钮：珊瑚橙 */
+  .btn-primary {
+    @apply inline-flex h-12 items-center justify-center rounded-2xl bg-brand px-5 text-base font-semibold text-white shadow-floaty transition-all duration-200 active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none;
+  }
+  .btn-primary:hover {
+    @apply brightness-105;
+  }
+
+  /* 次级按钮 */
+  .btn-secondary {
+    @apply inline-flex h-12 items-center justify-center rounded-2xl border-2 border-ink/10 bg-white px-5 text-base font-semibold text-ink transition-all duration-200 active:scale-[.97];
+  }
+
+  /* 文本输入框 */
+  .input {
+    @apply h-12 w-full rounded-xl border-2 border-ink/10 bg-white px-4 text-[15px] text-ink outline-none transition-colors placeholder:text-ink/35 focus:border-brand;
+  }
+
+  .section-title {
+    @apply text-sm font-bold tracking-wide text-ink/80;
+  }
+}

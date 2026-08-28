@@ -21,4 +21,13 @@ export const {
       },
     }),
   ],
+  callbacks: {
+    // 将用户 id 暴露到 session.user.id（学习进度写入需要）
+    session({ session, token }) {
+      if (session.user && token.sub) {
+        (session.user as any).id = token.sub;
+      }
+      return session;
+    },
+  },
 });
