@@ -181,6 +181,52 @@ export async function getAllProgress(userId: number) {
     .orderBy(asc(books.id));
 }
 
+// ============================================================
+// 学习计划操作
+// ============================================================
+
+export async function addBookToPlan(userId: number, bookId: string) {
+  await initDatabase();
+  await db
+    .insert(userBookProgress)
+    .values({ userId, bookId, currentWordIndex: 0 })
+    .onConflictDoNothing({
+      target: [userBookProgress.userId, userBookProgress.bookId],
+    });
+}
+
+export async function removeBookFromPlan(userId: number, bookId: string) {
+  await initDatabase();
+  await db
+    .delete(userBookProgress)
+    .where(
+      and(eq(userBookProgress.userId, userId), eq(userBookProgress.bookId, bookId)),
+    );
+}
+
+export async function getUserPlanBooks(userId: number) {
+  await initDatabase();
+  return await db
+    .select({
+      bookId: books.bookId,
+      title: books.title,
+      wordCount: books.wordCount,
+      coverUrl: books.coverUrl,
+      currentWordIndex: sql<number>`coalesce(${userBookProgress.currentWordIndex}, 0)::int`,
+      updatedAt: userBookProgress.updatedAt,
+    })
+    .from(books)
+    .innerJoin(
+      userBookProgress,
+      and(
+        eq(userBookProgress.bookId, books.bookId),
+        eq(userBookProgress.userId, userId),
+      ),
+    )
+    .where(eq(books.status, 'active'))
+    .orderBy(asc(books.id));
+}
+
 export async function upsertProgress(
   userId: number,
   bookId: string,

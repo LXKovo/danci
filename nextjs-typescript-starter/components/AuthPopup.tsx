@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { useAuth } from './auth-context';
 
 type Mode = 'login' | 'register';
@@ -22,6 +22,7 @@ function AuthForm({
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { closeAuth, redirectTo } = useAuth();
+  const { update } = useSession();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,21 +53,29 @@ function AuthForm({
       }
 
       // 登录（注册成功后自动登录）
-      const res = await signIn('credentials', {
+      // 使用 signIn 替代手动 fetch，NEXT_PUBLIC_NEXTAUTH_URL 已配置可避免 URL 构造报错
+      const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       });
-      if (res?.error) {
+
+      if (!result?.ok) {
         setError(
           mode === 'register' ? '注册成功，请使用账号密码登录' : '邮箱或密码错误',
         );
         return;
       }
 
+      // 登录成功后刷新客户端 session，让 SessionProvider 感知到新登录态
+      await update();
+
       closeAuth();
       router.push(redirectTo || '/');
-      router.refresh(); // 刷新服务端组件，更新登录态
+      router.refresh();
+    } catch (err) {
+      console.error('登录失败:', err);
+      setError('登录失败，请检查网络连接后重试');
     } finally {
       setLoading(false);
     }

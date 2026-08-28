@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getBooks, getAllProgress } from 'app/db';
 import { auth } from 'app/auth';
 import BookCard from '@/components/BookCard';
+import PlanSection from '@/components/PlanSection';
 
 // 每次请求实时查询，避免构建时静态化访问数据库
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,9 @@ type RecentBook = {
 
 function RecentCard({ item }: { item: RecentBook }) {
   const { currentWordIndex: idx, wordCount, bookTitle, bookId } = item;
-  const pct = wordCount ? Math.min(100, Math.round((Math.min(idx + 1, wordCount) / wordCount) * 100)) : 0;
+  const pct = wordCount
+    ? Math.min(100, Math.round((Math.min(idx + 1, wordCount) / wordCount) * 100))
+    : 0;
 
   return (
     <Link
@@ -62,8 +65,12 @@ export default async function Page() {
   // 登录用户：取最近学习（按最近更新排序取第一条）
   let recent: RecentBook | null = null;
   const token = session?.user && (session.user as any).id;
+  let userPlanBookIds: Set<string> = new Set();
   if (token != null) {
     const all = await getAllProgress(Number(token));
+    // 记录用户已加入计划的单词书 ID
+    userPlanBookIds = new Set(all.filter((p) => p.updatedAt != null).map((p) => p.bookId));
+
     const list = all
       .filter((p) => p.currentWordIndex > 0)
       .sort(
@@ -83,10 +90,10 @@ export default async function Page() {
   }
 
   return (
-    <div className="px-4 pt-6">
+    <div className="px-4 pt-6 pb-4">
       {/* 顶部品牌区 */}
       <header className="flex items-center gap-3">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-2xl shadow-floaty animate-bounce-soft">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-2xl shadow-floaty">
           📚
         </span>
         <div>
@@ -97,6 +104,30 @@ export default async function Page() {
         </div>
       </header>
 
+      {/* 学习统计卡片 */}
+      {token && (
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="card flex items-center gap-3 p-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-lg">
+              📖
+            </span>
+            <div>
+              <p className="text-xs text-ink/50">已加入计划</p>
+              <p className="text-lg font-extrabold text-ink">{userPlanBookIds.size}</p>
+            </div>
+          </div>
+          <div className="card flex items-center gap-3 p-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-leaf-soft text-lg">
+              🏆
+            </span>
+            <div>
+              <p className="text-xs text-ink/50">系统单词书</p>
+              <p className="text-lg font-extrabold text-ink">{books.length}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 最近学习（登录且有进度才显示） */}
       {recent && (
         <section className="mt-6 animate-pop-in">
@@ -104,15 +135,20 @@ export default async function Page() {
         </section>
       )}
 
-      {/* 单词书列表 */}
+      {/* 我的学习计划（登录后展示） */}
+      <PlanSection />
+
+      {/* 全部单词书 */}
       <section className="mt-6">
         <div className="flex items-center gap-2">
           <span className="h-4 w-1 rounded-full bg-brand" />
-          <h2 className="section-title">单词书</h2>
+          <h2 className="section-title">全部单词书</h2>
+          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-xs font-bold text-ink/40">
+            {books.length} 本
+          </span>
         </div>
 
         {books.length === 0 ? (
-          // 空状态占位
           <div className="card mt-4 flex flex-col items-center py-14 text-center">
             <span className="text-4xl animate-float">🗂️</span>
             <p className="mt-3 text-sm font-medium text-ink/50">
@@ -133,6 +169,7 @@ export default async function Page() {
                     wordCount: book.wordCount,
                     coverUrl: book.coverUrl,
                   }}
+                  inPlan={userPlanBookIds.has(book.bookId)}
                 />
               </li>
             ))}

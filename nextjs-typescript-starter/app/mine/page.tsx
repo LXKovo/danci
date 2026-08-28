@@ -1,6 +1,7 @@
 import { auth } from 'app/auth';
 import { getAllProgress } from 'app/db';
 import ProgressBar from '@/components/ProgressBar';
+import LoginPrompt from '@/components/LoginPrompt';
 import LogoutButton from './logout-button';
 
 export const dynamic = 'force-dynamic';
@@ -10,14 +11,7 @@ export default async function MinePage() {
   const user = session?.user;
 
   if (!user) {
-    // 理论上 /mine 是公开页，未登录也能访问，给一个友好的占位
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <span className="text-5xl animate-float">🍪</span>
-        <p className="mt-4 text-base font-bold text-ink">还没有登录</p>
-        <p className="mt-1 text-sm text-ink/50">登录后就能同步学习进度啦</p>
-      </div>
-    );
+    return <LoginPrompt />;
   }
 
   const userId = Number((user as any).id);

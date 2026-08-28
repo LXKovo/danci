@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import AuthPopup from './AuthPopup';
 
 type AuthContextValue = {
@@ -42,15 +42,15 @@ export function AuthProvider({
 
   // 未登录访问受保护路由被重定向到 /mine?callbackUrl=... 时自动弹出登录框
   const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get('callbackUrl');
   useEffect(() => {
-    const cb = searchParams.get('callbackUrl');
-    if (!cb) return;
-    openAuth(cb);
+    if (!callbackUrl) return;
+    openAuth(callbackUrl);
     // 清理 URL，避免重复弹出
     const url = new URL(window.location.href);
     url.searchParams.delete('callbackUrl');
     window.history.replaceState({}, '', url.toString());
-  }, [searchParams, openAuth]);
+  }, [callbackUrl, openAuth]);
 
   const value = useMemo(
     () => ({ isOpen, redirectTo, openAuth, closeAuth }),

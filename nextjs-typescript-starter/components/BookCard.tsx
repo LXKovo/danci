@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useAuth } from './auth-context';
+import PlanButton from './PlanButton';
 
 type Book = {
   bookId: string;
@@ -37,7 +38,7 @@ function BookCoverFallback({ title, badge }: { title: string; badge: string }) {
   );
 }
 
-export default function BookCard({ book }: { book: Book }) {
+export default function BookCard({ book, inPlan = false }: { book: Book; inPlan?: boolean }) {
   const router = useRouter();
   const { status } = useSession();
   const { openAuth } = useAuth();
@@ -47,19 +48,20 @@ export default function BookCard({ book }: { book: Book }) {
     if (status === 'authenticated') {
       router.push(`/study/${book.bookId}`);
     } else {
-      // 未登录：记住目标 → 切到「我的」Tab → 弹出登录/注册弹窗
+      // 未登录：记住目标 → 弹出登录/注册弹窗
       openAuth(`/study/${book.bookId}`);
-      router.push('/mine');
     }
   };
 
   const firstChar = book.title.slice(0, 1);
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
-      className="card group flex w-full items-center gap-4 p-3 text-left transition-transform duration-200 hover:-translate-y-0.5 active:scale-[.98]"
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
+      className="card group flex w-full cursor-pointer items-center gap-4 p-3 text-left transition-transform duration-200 hover:-translate-y-0.5 active:scale-[.98]"
     >
       {/* 封面 */}
       <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl shadow-card">
@@ -97,20 +99,23 @@ export default function BookCard({ book }: { book: Book }) {
         </span>
       </div>
 
-      {/* 进入箭头 */}
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink/40 transition-colors group-active:bg-brand group-active:text-white">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-4 w-4"
-        >
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      </span>
-    </button>
+      {/* 加入学习按钮 + 进入箭头 */}
+      <div className="flex shrink-0 items-center gap-2">
+        <PlanButton bookId={book.bookId} inPlan={inPlan} />
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/5 text-ink/40 transition-colors group-active:bg-brand group-active:text-white">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </span>
+      </div>
+    </div>
   );
 }
