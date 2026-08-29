@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { errorResponse } from "@/lib/api-response";
 import { getCurrentAdmin, isSameOrigin, isSystemAdmin } from "@/lib/auth-server";
 import { db } from "@/lib/db";
-import { books, words } from "@/lib/db/schema";
+import { books } from "@/lib/db/schema";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -96,7 +96,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
       .$withCache(false);
     if (!target) return errorResponse("单词书不存在", 404);
 
-    await db.delete(words).where(eq(words.bookId, target.bookId));
+    // FK 已设 ON DELETE CASCADE，删书时自动级联删除单词
     await db.delete(books).where(eq(books.id, numericId));
 
     return Response.json({ ok: true });
