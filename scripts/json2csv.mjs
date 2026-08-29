@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
 
 // 默认输入文件，可通过命令行参数覆盖
+// 用法: node scripts/json2csv.mjs [输入路径] [输出路径]
 const inputPath = process.argv[2] ?? 'd:\\LvMeng_Stuy\\ai-coding\\danci\\danci-admin\\temp\\PEPXiaoXue3_1.json';
 
 // 从一段文本中提取多个拼接在一起的顶层 JSON 对象（形如 {} {} {}，对象之间无逗号）
@@ -64,8 +65,7 @@ for (const rec of records) {
   lines.push(row.map(csvField).join(','));
 }
 
-const outputName = basename(inputPath, extname(inputPath)) + '.csv';
-const outputPath = join(dirname(inputPath), outputName);
+const outputPath = process.argv[3] ?? join(dirname(inputPath), basename(inputPath, extname(inputPath)) + '.csv');
 writeFileSync(outputPath, lines.join('\n') + '\n', 'utf8');
 
 console.log(`已生成 CSV：${outputPath}`);

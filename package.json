@@ -1,0 +1,7 @@
+{
+  "name": "danci",
+  "private": true,
+  "scripts": {
+    "json2csv": "node scripts/json2csv.mjs"
+  }
+}

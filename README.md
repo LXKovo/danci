@@ -1,103 +1,68 @@
-# danci
-next.js 单词后台管理系统和h5 应用开发
+# danci — 英语单词学习平台
 
-## 应用形式
-- 后台管理系统 
-- h5应用
-- 多端开发
-## 亮点
-- 数据清洗 
-github 高星的 单词资料库 
-数据清洗 （选择、格式化、审核）
-- supabase 云端类psql数据库
-  关系型数据库
-- 支持向量数据库
-- 云端 BAAS 数据库 
-  Backend as a service 
-- ORM 
-  不用写sql, 不用做数据库的底层处理 
-  对象关系映射
-  todo.save() 保存
-  对象和数据库一行记录 对应起来 
+基于 Next.js 的英语单词学习平台，包含后台管理系统和 H5 学习应用，支持多端使用。
 
-## 后台管理系统 
-### 单词书管理
-维护单词书，包括单词书的创建、删除、更新、查询等操作。
-交给小编管理员 
-### 管理员管理
-- 注册一个超级管理员， 一个人 
-- 添加管理员 
+## 项目结构
 
-/ -> 注册超级管机员页面 -> 登录 
-/ -> 登录页 
-      -》 跳转到单词书管理
+```
+danci/
+├── danci-admin/              # 后台管理系统
+│   ├── app/                  # Next.js App Router 页面
+│   ├── lib/db/               # 数据库 Schema 与连接
+│   ├── components/ui/        # shadcn/ui 组件
+│   └── drizzle/              # 数据库迁移文件
+├── nextjs-typescript-starter/ # H5 单词学习应用
+│   ├── app/                  # 页面与 API 路由
+│   ├── components/           # 前端组件
+│   └── lib/                  # 数据库 Schema 与连接
+└── scripts/                  # 工具脚本
+    └── json2csv.mjs          # JSON 转 CSV 脚本
+```
 
-## shadcn/ui UI 组件库
-- 80% 前端组件业务趋同，不用
-重复造轮子，选用第三方组件库。
-- element-ui / ANT Design
-- shadcn 定制性很好，tailwindcss 配合使用
-  语义化， ai 友好
-  按需加载
-- 目录在 components/ui 目录下
+## 项目说明
 
-## supabase 
-BAAS 数据库云服务
-性能、安全、可扩展性、部署成本
-几乎为0
-- psql embeeding + 关系数据库
+### [danci-admin](./danci-admin/README.md) — 后台管理系统
 
-**Conventional Commits（约定式提交）** 规范，也是目前最主流的 Git 提交信息风格。
-- feat 新增功能
-- fix 修复 bug
-- docs 文档变更
-- refactor 代码重构
-- style 样式变更
-- test 测试变更
-- chore 构建工具变更
-coding agent 内置的git 提交
+单词书管理后台，供管理员使用。
 
-## ORM
+- 单词书 CRUD（创建、查询、更新、删除）
+- 管理员认证与管理
+- 基于 shadcn/ui 的 UI 组件
+- PostgreSQL 数据库，Drizzle ORM
 
-- 数据库supabase 已云端部署
-.env DATABASE_URL
-- next.js面向对象编程 Object 
- user 
- drizzle-orm 映射  翻译
- psql User Table  低级 sql
-- drizzle 接受数据库 .env
-不需要建表，建schema 映射的就是数据表
-migrations 数据表迁移
+### [nextjs-typescript-starter](./nextjs-typescript-starter/README.md) — H5 学习应用
 
-## drizzle-orm
-ORM 工具的一种，有一系列的包和命令
--db 目录
-- inex.ts 数据库配置
-链接并返回db 数据库操作句柄
-- schema.ts 数据库映射
-对象定义数据表结构
-- 配套一系列脚本 drizzle-kit 
- - generate  生成数据库迁移文件
-  
- - migrate  运行数据库迁移文件
+面向学生的英语单词学习 H5 应用。
 
- ## words 表
- github 下载zip->json 文件(178kb)
-想创建一个words表，导入这个数据？ json ->sql/csv直接导入数据库
-可以让ai生成一个转化的脚本
+- 单词书浏览与学习计划
+- 单词学习卡片（翻卡模式）
+- 英美发音
+- 学习进度追踪
+- 邮箱密码登录/注册
 
-## 数据清洗
-- 常见的后端功能
-script/
- 解决一些问题 爬虫、数据格式转换等等
- ai来做？上下文比较大，上下文窗口限制，token开销大
- 可以让ai创建一个数据清洗脚本
+### [scripts/json2csv.mjs](./scripts/json2csv.mjs) — 数据转换脚本
 
- - RLS
- 行安全words公共表没必要开启，而每个用户的背单词记录需要开启
- - prompt 执行上下文考虑
- 1. 给prompt 添加充足的上下文
- 2. 隐藏上下文开销，不让AI去读文件，给他文件的格式
+将 JSON 格式的单词数据批量转换为 CSV 格式，方便导入数据库。
 
- ## 让ai了解supabase 有books表
- - 
+```bash
+npm run json2csv                    # 使用默认文件
+npm run json2csv -- "输入路径"       # 指定输入文件
+npm run json2csv -- "输入路径" "输出路径"  # 指定输入输出
+```
+
+## 技术栈
+
+| 项目 | 技术栈 |
+|------|--------|
+| 后台管理 | Next.js 14, shadcn/ui, Drizzle ORM, PostgreSQL |
+| H5 学习 | Next.js 14, NextAuth.js, Drizzle ORM, PostgreSQL, Tailwind CSS |
+| 数据库 | PostgreSQL (Supabase / Neon) |
+| 部署 | Vercel |
+
+## 部署
+
+两个项目均部署在 Vercel 上，需分别配置环境变量：
+
+- `POSTGRES_URL` / `DATABASE_URL` — 数据库连接串
+- `AUTH_SECRET` — NextAuth 密钥（仅 H5 应用需要）
+- `NEXTAUTH_URL` — 部署域名（仅 H5 应用需要）
